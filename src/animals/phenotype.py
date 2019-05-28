@@ -14,7 +14,6 @@ class Phenotype:
         self.trait_value_dict = None
 
         self.init_traits()
-        self.adjust_traits()
 
     ############################################################################################################
     def __repr__(self):
@@ -70,7 +69,3 @@ class Phenotype:
 
             elif self.trait_gene_size_dict[trait][1] == 'vector':
                 self.trait_value_dict[trait] = gene
-
-    ############################################################################################################
-    def adjust_traits(self):
-        self.trait_value_dict['Max Size'] += 1

@@ -2,7 +2,7 @@ import tkinter as tk
 import os
 import sys
 from src import config
-from src.display import button_frame, summary_frame, main_frame
+from src.display import button_canvas, summary_frame, main_frame
 import time
 import numpy as np
 
@@ -39,7 +39,7 @@ class Display:
         self.tile_info_window = None
         self.tile_info_window_instance = None
 
-        self.button_frame = None
+        self.button_canvas = None
         self.button_canvas_height = 20
         self.button_canvas_width = self.root_width
 
@@ -84,8 +84,8 @@ class Display:
 
     ############################################################################################################
     def create_buttons(self):
-        self.button_frame = button_frame.ButtonFrame(self)
-        self.button_frame.grid(row=1, column=0, columnspan=2, padx=0, pady=0, ipadx=0, ipady=0)
+        self.button_canvas = button_canvas.ButtonCanvas(self)
+        self.button_canvas.grid(row=1, column=0, columnspan=2, padx=0, pady=0, ipadx=0, ipady=0)
 
     ############################################################################################################
     def load_images(self):
@@ -102,10 +102,10 @@ class Display:
     def run_game(self):
         if self.running:
             self.running = False
-            self.button_frame.run_button.config(text="Run")
+            self.button_canvas.run_button.config(text="Run")
         else:
             self.running = True
-            self.button_frame.run_button.config(text="Pause")
+            self.button_canvas.run_button.config(text="Pause")
 
         while self.running:
             self.next_turn()
@@ -122,6 +122,7 @@ class Display:
 
         start_time = time.time()
         self.main_frame.main_canvas.delete("all")
+        self.summary_frame.summary_canvas.delete("all")
         self.display_timers_array[1] += time.time() - start_time
 
         start_time = time.time()
@@ -137,7 +138,6 @@ class Display:
         self.display_timers_array[4] += time.time() - start_time
 
         start_time = time.time()
-        self.summary_frame.clear_summary_display()
         self.summary_frame.update_summary_display()
         self.display_timers_array[5] += time.time() - start_time
 
@@ -145,26 +145,25 @@ class Display:
         self.root.update()
         self.display_timers_array[6] += time.time() - start_time
 
-        if config.GlobalOptions.timing_freq:
-            if self.turn % 100 == 0:
-                print("turn    WLD    obj    pla    ff1    act    dri    ff2    unn    grw    uap    pre    die    sum   | "
-                      "DIS    wld    del    ter    obj    ani    sum    roo")
-            if self.turn % config.GlobalOptions.timing_freq == 0:
-                output_string = "{:5s}".format(str(self.turn))
-                output_string += "  {:0.3f}".format(self.the_world.world_timers_array.sum())
-                for timer in self.the_world.world_timers_array:
-                    output_string += "  {:0.3f}".format(timer)
-                output_string += " |"
-                output_string += "  {:0.3f}".format(self.display_timers_array.sum())
-                for timer in self.display_timers_array:
-                    output_string += "  {:0.3f}".format(timer)
-                print(output_string)
-                self.the_world.world_timers_array = np.zeros([12])
-                self.display_timers_array = np.zeros([7])
-
-                self.timer_output_file = open("output/timers.txt", "a")
-                self.timer_output_file.write(output_string + "\n")
-                self.timer_output_file.close()
+        # if self.turn % 100 == 0:
+        #     print("turn    WLD    obj    pla    ff1    act    dri    ff2    unn    grw    uap    pre    die    sum   | "
+        #           "DIS    wld    del    ter    obj    ani    sum    roo")
+        # if self.turn % 10 == 0:
+        #     output_string = "{:5s}".format(str(self.turn))
+        #     output_string += "  {:0.3f}".format(self.the_world.world_timers_array.sum())
+        #     for timer in self.the_world.world_timers_array:
+        #         output_string += "  {:0.3f}".format(timer)
+        #     output_string += " |"
+        #     output_string += "  {:0.3f}".format(self.display_timers_array.sum())
+        #     for timer in self.display_timers_array:
+        #         output_string += "  {:0.3f}".format(timer)
+        #     print(output_string)
+        #     self.the_world.world_timers_array = np.zeros([12])
+        #     self.display_timers_array = np.zeros([7])
+        #
+        #     self.timer_output_file = open("output/timers.txt", "a")
+        #     self.timer_output_file.write(output_string + "\n")
+        #     self.timer_output_file.close()
 
     ############################################################################################################
     def save_game(self):

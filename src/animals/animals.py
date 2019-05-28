@@ -2,7 +2,6 @@ import random
 import numpy as np
 from src import config
 from src.animals import phenotype, drive_system, nervous_system, action_system, genome
-import time
 
 
 class Animal:
@@ -56,34 +55,13 @@ class Animal:
 
     ############################################################################################################
     def take_turn(self):
-
-        start_time = time.time()
         self.nervous_system.stored_neural_feedforward()
-        self.the_world.world_timers_array[2] += time.time() - start_time
-
-        start_time = time.time()
         self.action_system.action_turn()
-        self.the_world.world_timers_array[3] += time.time() - start_time
-
-        start_time = time.time()
         self.drive_system.update_drives(self.action_system.action_choice)
-        self.the_world.world_timers_array[4] += time.time() - start_time
-
-        start_time = time.time()
         self.nervous_system.update_sensory_state()
-        self.the_world.world_timers_array[5] += time.time() - start_time
-
-        start_time = time.time()
         self.nervous_system.update_neural_weights()
-        self.the_world.world_timers_array[6] += time.time() - start_time
-
-        start_time = time.time()
         self.grow_older()
-        self.the_world.world_timers_array[7] += time.time() - start_time
-
-        start_time = time.time()
         self.update_appearance()
-        self.the_world.world_timers_array[8] += time.time() - start_time
 
     ############################################################################################################
     def grow_older(self):

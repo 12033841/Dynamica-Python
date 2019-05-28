@@ -7,7 +7,10 @@ import random
 import time
 import sys
 import numpy as np
-
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')
 
 class World:
     def __init__(self):
@@ -32,6 +35,15 @@ class World:
 
         self.turn_summary_dict = None
         self.initial_animal_summary_dict = None
+        self.species_summary_history_list = []
+
+        self.zebra_health_list = []
+        self.zebra_energy_list = []
+        self.zebra_arousal_list = []
+
+        self.zebra_health_len = []
+        self.zebra_energy_len = []
+        self.zebra_arousal_len = []
 
         self.appearance_dict = None
         random_seed = config.GlobalOptions.random_seed
@@ -50,6 +62,8 @@ class World:
         self.generate_objects()
         self.calc_turn_summary()
         self.calc_initial_animal_summaries()
+        self.calc_all_species_summaries()
+        self.plot_species_summary()
 
         self.world_timers_array = np.zeros([12])
 
@@ -172,6 +186,7 @@ class World:
     def calc_turn_summary(self):
         self.turn_summary_dict = {'Plant': {}, 'Animal': {}, 'Object': {}}
 
+
         for species in self.plant_species_counts_dict:
             self.turn_summary_dict['Plant'][species] = [self.plant_species_counts_dict[species], 0]
             for plant in self.plant_list:
@@ -185,11 +200,26 @@ class World:
             self.turn_summary_dict['Animal'][animal.species][2] += animal.drive_system.drive_value_array[1]
             self.turn_summary_dict['Animal'][animal.species][3] += animal.drive_system.drive_value_array[2]
 
+
+
         for species in self.animal_species_counts_dict:
             if self.turn_summary_dict['Animal'][species][0]:
                 self.turn_summary_dict['Animal'][species][1] /= self.turn_summary_dict['Animal'][species][0]
+                self.zebra_health_list.append(self.turn_summary_dict['Animal'][species][1])
                 self.turn_summary_dict['Animal'][species][2] /= self.turn_summary_dict['Animal'][species][0]
+                self.zebra_energy_list.append(self.turn_summary_dict['Animal'][species][2])
                 self.turn_summary_dict['Animal'][species][3] /= self.turn_summary_dict['Animal'][species][0]
+                self.zebra_arousal_list.append(self.turn_summary_dict['Animal'][species][3])
+            self.zebra_health_len.append(len(self.zebra_health_list))
+            self.zebra_energy_len.append(len(self.zebra_energy_list))
+            self.zebra_arousal_len.append(len(self.zebra_arousal_list))
+            zebra_health_array = np.array(self.zebra_health_list)
+            zebra_energy_array = np.array(self.zebra_energy_list)
+            zebra_arousal_array = np.array(self.zebra_arousal_list)
+            print(self.zebra_health_len, zebra_health_array)
+            self.plot_graph(self.zebra_health_len, zebra_health_array, self.zebra_energy_len, zebra_energy_array,
+                            self.zebra_arousal_len, zebra_arousal_array)
+
 
     ############################################################################################################
     def calc_initial_animal_summaries(self):
@@ -199,10 +229,22 @@ class World:
             self.initial_animal_summary_dict[species] = animal_summary_dict
 
     ############################################################################################################
+    def calc_all_species_summaries(self):
+        all_species_summaries_dict = {}
+
+        for species in self.animal_species_counts_dict:
+            species_summary_dict = self.calc_species_summary(species)
+            all_species_summaries_dict[species] = species_summary_dict
+        self.species_summary_history_list.append(all_species_summaries_dict)
+
+    ############################################################################################################
+    # ToDo: 05/14/19 - Use calc_species_summary data for time-series data visualization
+
     def calc_species_summary(self, species):
 
         animal_summary_dict = {'N': self.turn_summary_dict['Animal'][species][0],
                                'Drive Values': self.turn_summary_dict['Animal'][species][1:]}
+
         sex_sum = 0.0
         age_sum = 0.0
         size_sum = 0.0
@@ -247,7 +289,22 @@ class World:
         animal_summary_dict['Drive Reinforcement Rates'] = drive_reinforcement_sums / n
         animal_summary_dict['Action Outputs'] = action_output_sums / n
 
-        return animal_summary_dict
+        return animal_summary_dict#, plt.figure(1, figsize=(6, 6)),                         #   plt.plot(pd.DataFrame.from_dict(animal_summary_dict))
+
+    ############################################################################################################
+    def plot_graph(self, zebra_health_len, zebra_health_array, zebra_energy_len, zebra_energy_array, zebra_arousal_len,
+                   zebra_arousal_array):
+        plt.plot(zebra_health_len, zebra_health_array, 's-.r', label = "Health")
+        plt.plot(zebra_energy_len, zebra_energy_array, 's-.c', label = "Energy")
+        plt.plot(zebra_arousal_len, zebra_arousal_array, 's-.b', label = "Arousal")
+
+        plt.xlabel("Turns")
+        plt.ylabel("Zebra_Drive_Value")
+
+        #plt.legend(loc = 'upper left')
+
+        plt.show()
+
 
     ############################################################################################################
     def next_turn(self):
@@ -307,6 +364,8 @@ class World:
 
         start_time = time.time()
         self.calc_turn_summary()
+        self.calc_all_species_summaries()
+        self.plot_species_summary()
         self.world_timers_array[11] += time.time() - start_time
 
         if config.GlobalOptions.summary_freq:
@@ -316,6 +375,23 @@ class World:
                     self.write_summary()
 
         self.current_turn += 1
+
+    ############################################################################################################
+    def plot_species_summary(self):
+        # Take the output from this function and use it to create three subplots for each animal's drive values
+        # of the drive values that are only displayed upon clicking the animal's image on the main GUI display
+
+        #self.species_summary_history_list
+
+        print(self.species_summary_history_list)
+
+    '''
+        create a window
+        for each type fo info we care about
+        create a plot and put it in the window
+
+    '''
+
 
     ############################################################################################################
     def print_summary(self):
